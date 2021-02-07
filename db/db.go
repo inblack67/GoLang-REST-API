@@ -14,6 +14,10 @@ func ConnectDB() (*pg.DB){
 		Addr: ":5432",
 		Database: "go",
 	})
+
+	defer db.Close()
+
 	fmt.Println("Postgres is here")
+	
 	return db
 }
