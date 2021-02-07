@@ -3,21 +3,17 @@ package db
 import (
 	"fmt"
 
-	"github.com/go-pg/pg/v10"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 // ConnectDB ...
-func ConnectDB() (*pg.DB){
-	db := pg.Connect(&pg.Options{
-		User: "postgres",
-		Password: "postgres",
-		Addr: ":5432",
-		Database: "go",
-	})
-
-	defer db.Close()
-
+func ConnectDB() (*gorm.DB){
+	dsn := "host=localhost user=postgres password=postgres dbname=go port=5432"
+	pg, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil{
+		panic(err)
+	}
 	fmt.Println("Postgres is here")
-	
-	return db
+	return pg
 }
