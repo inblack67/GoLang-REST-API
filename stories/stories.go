@@ -22,12 +22,20 @@ func GetAllStories(ctx *fiber.Ctx) error{
 
 // GetSingleStory ...
 func GetSingleStory(ctx *fiber.Ctx) error{
-	return ctx.SendString("Get Single Story")
+	id := ctx.Params("id")
+	var story models.Story
+	db.PgConn.Find(&story, id)
+	return ctx.JSON(story)
 }
 
 // CreateStory ...
 func CreateStory(ctx *fiber.Ctx) error{
-	return ctx.SendString("Add new story")
+	newBook := new(models.Story)
+	if err := ctx.BodyParser(newBook); err != nil {
+            return err
+    }
+	db.PgConn.Create(&newBook)
+	return ctx.JSON(newBook)
 }
 
 // DeleteStory ...
