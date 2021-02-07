@@ -17,7 +17,7 @@ func setupRoutes(app *fiber.App){
 }
 
 func main(){
-
+	
 	db.ConnectDB()
 
 	app := fiber.New()
