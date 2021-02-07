@@ -1,12 +1,23 @@
 package stories
 
 import (
+	"fibreApi/db"
+	"fibreApi/models"
+
 	"github.com/gofiber/fiber/v2"
 )
 
+// Hello ...
+type Hello struct{
+	success bool
+	msg string
+}
+
 // GetAllStories ...
 func GetAllStories(ctx *fiber.Ctx) error{
-	return ctx.SendString("Get All Stories")
+	var stories []models.Story
+	db.PgConn.Find(&stories)
+	return ctx.JSON(stories)
 }
 
 // GetSingleStory ...
