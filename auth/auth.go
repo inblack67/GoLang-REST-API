@@ -56,6 +56,12 @@ func RegisterUser(ctx *fiber.Ctx) error{
             return err
     }
 
+	validationError := newUser.ValidateMe()
+
+	if validationError != nil{
+		return ctx.Status(400).JSON(validationError)
+	}
+
 	hashedPassword, err := argon2id.CreateHash(newUser.Password, argon2id.DefaultParams)
 
 	if err != nil{

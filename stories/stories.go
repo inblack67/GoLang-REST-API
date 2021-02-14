@@ -54,6 +54,13 @@ func CreateStory(ctx *fiber.Ctx) error{
             return err
     }
 
+	validationError := newStory.ValidateStory()
+
+	if validationError != nil{
+		return ctx.Status(400).JSON(validationError)
+	}
+
+
 	newStory.CreatedAt = time.Now()
 	newStory.UpdatedAt = time.Now()
 
