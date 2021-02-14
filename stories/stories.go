@@ -15,8 +15,8 @@ type Hello struct{
 
 // Status ...
 type Status struct{
-	success bool
-	msg string
+	Success bool `json:"success"`
+	Message string `json:"message"`
 }
 
 // GetAllStories ...
@@ -32,7 +32,7 @@ func GetSingleStory(ctx *fiber.Ctx) error{
 	var story models.Story
 	db.PgConn.Find(&story, id)
 	if story.Title == ""{
-		return ctx.Status(404).JSON(Status{success: false, msg: "Story does not exists"})
+		return ctx.Status(404).JSON(Status{Success: false, Message: "Story does not exists"})
 	}
 	return ctx.Status(200).JSON(story)
 }
@@ -53,8 +53,8 @@ func DeleteStory(ctx *fiber.Ctx) error{
 	var story models.Story
 	db.PgConn.Find(&story, id)
 	if story.Title == ""{
-		return ctx.Status(404).JSON(Status{success: false, msg: "Story does not exists"})
+		return ctx.Status(404).JSON(Status{Success: false, Message: "Story does not exists"})
 	}
 	db.PgConn.Delete(&story, id)
-	return ctx.Status(200).JSON(Status{success: true, msg: "Story deleted successfully"})
+	return ctx.Status(200).JSON(Status{Success: true, Message: "Story deleted successfully"})
 }
