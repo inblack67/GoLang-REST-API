@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fibreApi/db"
 	"fibreApi/models"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -40,7 +41,7 @@ func GetSingleStory(ctx *fiber.Ctx) error{
 
 	notFoundErr := errors.Is(err, gorm.ErrRecordNotFound)
 		if(notFoundErr || models.Story{} == story){
-			return ctx.Status(404).JSON(Status{Success: false, Message: "Story does not exists"})
+			return ctx.Status(404).JSON(Status{Success: false, Message: "Story does not exist"})
 		}
 
 	return ctx.Status(200).JSON(story)
@@ -48,17 +49,21 @@ func GetSingleStory(ctx *fiber.Ctx) error{
 
 // CreateStory ...
 func CreateStory(ctx *fiber.Ctx) error{
-	newBook := new(models.Story)
-	if err := ctx.BodyParser(newBook); err != nil {
+	newStory := new(models.Story)
+	if err := ctx.BodyParser(newStory); err != nil {
             return err
     }
-	err2 := db.PgConn.Create(&newBook).Error
+
+	newStory.CreatedAt = time.Now()
+	newStory.UpdatedAt = time.Now()
+
+	err2 := db.PgConn.Create(&newStory).Error
 
 	if(err2 != nil){
 		return ctx.Status(401).JSON(err2)
 	}
 
-	return ctx.Status(201).JSON(newBook)
+	return ctx.Status(201).JSON(newStory)
 
 }
 
@@ -72,7 +77,7 @@ func DeleteStory(ctx *fiber.Ctx) error{
 
 	notFoundErr := errors.Is(err, gorm.ErrRecordNotFound)
 		if(notFoundErr || models.Story{} == story){
-			return ctx.Status(404).JSON(Status{Success: false, Message: "Story does not exists"})
+			return ctx.Status(404).JSON(Status{Success: false, Message: "Story does not exist"})
 		}
 
 	dbc := db.PgConn.Delete(&story, id)
