@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"errors"
 	"fibreApi/db"
 	"fibreApi/models"
@@ -8,6 +9,7 @@ import (
 	"time"
 
 	"github.com/alexedwards/argon2id"
+	"github.com/go-redis/redis/v8"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
@@ -80,6 +82,51 @@ func RegisterUser(ctx *fiber.Ctx) error{
 
 	return ctx.Status(201).JSON(newUser)
 
+}
+
+// LoginUser ...
+func LoginUser(ctx *fiber.Ctx) error{
+
+	newUser := new(models.User)
+	if err := ctx.BodyParser(newUser); err != nil {
+            return err
+    }
+
+	validationError := newUser.ValidateMe()
+
+	if validationError != nil{
+		return ctx.Status(400).JSON(validationError)
+	}
+
+	hashedPassword, err := argon2id.CreateHash(newUser.Password, argon2id.DefaultParams)
+
+	if err != nil{
+		log.Fatal(err)
+	}
+
+	newUser.Password = hashedPassword
+	newUser.CreatedAt = time.Now()
+	newUser.UpdatedAt = time.Now()
+
+	err2 := db.PgConn.Create(&newUser).Error
+
+	if(err2 != nil){
+		return ctx.Status(401).JSON(err2)
+	}
+
+	return ctx.Status(201).JSON(newUser)
+
+}
+
+// GetMe ...
+func GetMe(ctx *fiber.Ctx) error{
+	redisClient := redis.Conn(redis.Conn{})
+	err := redisClient.Set(context.TODO(), "hello", "worlds", 0).Err()
+	if err != nil{
+		log.Fatal(err)
+	}
+	val := redisClient.Get(context.TODO(), "hello").Val()
+	return ctx.SendString(val)
 }
 
 // DeleteUser ...
