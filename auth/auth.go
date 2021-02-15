@@ -1,15 +1,14 @@
 package auth
 
 import (
-	"context"
 	"errors"
+	"fibreApi/cache"
 	"fibreApi/db"
 	"fibreApi/models"
 	"log"
 	"time"
 
 	"github.com/alexedwards/argon2id"
-	"github.com/go-redis/redis/v8"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
@@ -120,12 +119,10 @@ func LoginUser(ctx *fiber.Ctx) error{
 
 // GetMe ...
 func GetMe(ctx *fiber.Ctx) error{
-	redisClient := redis.Conn(redis.Conn{})
-	err := redisClient.Set(context.TODO(), "hello", "worlds", 0).Err()
+	val, err := cache.GET("hello")
 	if err != nil{
 		log.Fatal(err)
 	}
-	val := redisClient.Get(context.TODO(), "hello").Val()
 	return ctx.SendString(val)
 }
 

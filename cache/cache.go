@@ -3,13 +3,12 @@ package cache
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/go-redis/redis/v8"
 )
 
 // StartRedis ...
-func StartRedis() (*redis.Client){
+func StartRedis() (*redis.Client, context.Context){
 	redis := redis.NewClient(&redis.Options{})
 	fmt.Println("Redis is here")
 
@@ -17,20 +16,21 @@ func StartRedis() (*redis.Client){
 
 	redis.FlushAll(ctx)
 
-	err := redis.Set(ctx, "hello", "worlds", 0).Err()
-	if err != nil{
-		log.Fatal(err)
-	}
+	redis.Set(ctx, "hello", "worlds", 0)
 
-	value, err2 := redis.Get(ctx, "hello").Result()
+	return redis, ctx
+}
 
-	if err2 != nil{
-		log.Fatal(err)
-	}
+// SET ...
+func SET(key string, value string) error{
+	redisClient, ctx := StartRedis()
+	err := redisClient.Set(ctx, key, value, 0).Err()
+	return err
+}
 
-	fmt.Println("===========", value)
-
-	defer redis.Close()
-
-	return redis
+// GET ...
+func GET(key string) (string, error){
+	redisClient, ctx := StartRedis()
+	val , err := redisClient.Get(ctx, key).Result()
+	return val, err
 }
