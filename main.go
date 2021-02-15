@@ -2,6 +2,7 @@ package main
 
 import (
 	"fibreApi/auth"
+	"fibreApi/cache"
 	"fibreApi/db"
 	"fibreApi/mysession"
 	"fibreApi/stories"
@@ -30,6 +31,7 @@ func setupRoutes(app *fiber.App){
 
 func main(){
 	
+	cache.StartRedis()
 	db.ConnectDB()
 
 	mysession.CreateStore()

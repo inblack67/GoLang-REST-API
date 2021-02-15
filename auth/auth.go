@@ -1,12 +1,15 @@
 package auth
 
 import (
+	"context"
 	"errors"
+	"fibreApi/cache"
 	"fibreApi/constants"
 	"fibreApi/db"
 	"fibreApi/models"
 	"fibreApi/mysession"
 	"fibreApi/structs"
+	"fmt"
 	"log"
 	"time"
 
@@ -128,6 +131,14 @@ func LoginUser(ctx *fiber.Ctx) error{
 
 // GetMe ...
 func GetMe(ctx *fiber.Ctx) error{
+
+	cache.RedisClient.Set(context.Background(), constants.Hello, "worlds", time.Hour).Err()
+
+
+
+	custom, _ := cache.RedisClient.Get(context.Background(), constants.Hello).Result()
+
+	fmt.Print("oh no", custom)
 
 	session, sessionErr := mysession.SessionStore.Get(ctx)
 
