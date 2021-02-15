@@ -1,15 +1,13 @@
 package auth
 
 import (
-	"context"
 	"errors"
-	"fibreApi/cache"
 	"fibreApi/constants"
 	"fibreApi/db"
 	"fibreApi/models"
 	"fibreApi/mysession"
 	"fibreApi/structs"
-	"fmt"
+	"fibreApi/types"
 	"log"
 	"time"
 
@@ -91,6 +89,18 @@ func RegisterUser(ctx *fiber.Ctx) error{
 // LoginUser ...
 func LoginUser(ctx *fiber.Ctx) error{
 
+	session, sessionErr := mysession.SessionStore.Get(ctx)
+
+	if sessionErr != nil{
+		log.Fatal(sessionErr)
+	}
+
+	data := session.Get(constants.KLogin)
+
+	if data != nil{
+		return ctx.Status(401).JSON(Status{Success: false, Message: "Not Auth"})
+	}
+
 	credentials := new(structs.SLogin)
 
 	if err := ctx.BodyParser(credentials); err != nil {
@@ -116,13 +126,7 @@ func LoginUser(ctx *fiber.Ctx) error{
 		return ctx.Status(404).JSON(Status{Success: false, Message: "Invalid Credentials"})
 	}
 
-	session, sessionErr := mysession.SessionStore.Get(ctx)
-
-	if sessionErr != nil{
-		log.Fatal(sessionErr)
-	}
-
-	session.Set(constants.KLogin, models.User{Username: user.Username})
+	session.Set(constants.KLogin, types.SSession{Username: user.Username})
 
 	defer session.Save()
 
@@ -132,13 +136,23 @@ func LoginUser(ctx *fiber.Ctx) error{
 // GetMe ...
 func GetMe(ctx *fiber.Ctx) error{
 
-	cache.RedisClient.Set(context.Background(), constants.Hello, "worlds", time.Hour).Err()
+	session, sessionErr := mysession.SessionStore.Get(ctx)
 
+	if sessionErr != nil{
+		log.Fatal(sessionErr)
+	}
 
+	data := session.Get(constants.KLogin)
 
-	custom, _ := cache.RedisClient.Get(context.Background(), constants.Hello).Result()
+	if data == nil{
+		return ctx.Status(401).JSON(Status{Success: false, Message: "Not Auth"})
+	}
 
-	fmt.Print("oh no", custom)
+	return ctx.Status(200).JSON(data)
+}
+
+// LogoutUser ...
+func LogoutUser(ctx *fiber.Ctx) error{
 
 	session, sessionErr := mysession.SessionStore.Get(ctx)
 
@@ -148,7 +162,17 @@ func GetMe(ctx *fiber.Ctx) error{
 
 	data := session.Get(constants.KLogin)
 
-	return ctx.Status(200).JSON(data)
+	if data == nil{
+		return ctx.Status(401).JSON(Status{Success: false, Message: "Not Auth"})
+	}
+
+	err := session.Destroy()
+
+	if err != nil{
+		log.Fatal(err)
+	}
+
+	return ctx.Status(200).JSON(Status{Success: true, Message: "Logged Out"})
 }
 
 // DeleteUser ...

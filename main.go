@@ -27,6 +27,7 @@ func setupRoutes(app *fiber.App){
 	app.Delete("/api/users/:id", auth.DeleteUser)
 	app.Get("/api/me", auth.GetMe)
 	app.Post("/api/login", auth.LoginUser)
+	app.Post("/api/logout", auth.LogoutUser)
 }
 
 func main(){
