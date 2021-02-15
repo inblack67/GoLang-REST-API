@@ -6,8 +6,9 @@
     - Logout
     - CRUD Stories
 
-### Techs
-    - Fibre
+### Tech Stack
+    - GoLang
+    - Fiber
     - GORM
     - Postgres
     - Redis
