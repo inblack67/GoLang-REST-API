@@ -3,6 +3,7 @@ package main
 import (
 	"fibreApi/auth"
 	"fibreApi/db"
+	"fibreApi/mysession"
 	"fibreApi/stories"
 	"fmt"
 	"log"
@@ -24,12 +25,14 @@ func setupRoutes(app *fiber.App){
 	app.Post("/api/register", auth.RegisterUser )
 	app.Delete("/api/users/:id", auth.DeleteUser)
 	app.Get("/api/me", auth.GetMe)
-	// app.Post("/api/login", auth.RegisterUser)
+	app.Post("/api/login", auth.LoginUser)
 }
 
 func main(){
 	
 	db.ConnectDB()
+
+	mysession.CreateStore()
 
 	app := fiber.New()
 

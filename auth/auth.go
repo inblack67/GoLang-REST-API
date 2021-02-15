@@ -2,9 +2,11 @@ package auth
 
 import (
 	"errors"
-	"fibreApi/cache"
+	"fibreApi/constants"
 	"fibreApi/db"
 	"fibreApi/models"
+	"fibreApi/mysession"
+	"fibreApi/structs"
 	"log"
 	"time"
 
@@ -86,44 +88,56 @@ func RegisterUser(ctx *fiber.Ctx) error{
 // LoginUser ...
 func LoginUser(ctx *fiber.Ctx) error{
 
-	newUser := new(models.User)
-	if err := ctx.BodyParser(newUser); err != nil {
+	credentials := new(structs.SLogin)
+
+	if err := ctx.BodyParser(credentials); err != nil {
             return err
     }
 
-	validationError := newUser.ValidateMe()
+	var user models.User
 
-	if validationError != nil{
-		return ctx.Status(400).JSON(validationError)
-	}
+	err := db.PgConn.Find(&user, models.User{Username: credentials.Username}).Error
 
-	hashedPassword, err := argon2id.CreateHash(newUser.Password, argon2id.DefaultParams)
+	notFoundErr := errors.Is(err, gorm.ErrRecordNotFound)
+		if(notFoundErr || models.User{} == user){
+			return ctx.Status(404).JSON(Status{Success: false, Message: "Invalid Credentials"})
+		}
 
-	if err != nil{
+	isValidPassword, argonErr := argon2id.ComparePasswordAndHash(credentials.Password, user.Password)
+
+	if argonErr != nil{
 		log.Fatal(err)
 	}
 
-	newUser.Password = hashedPassword
-	newUser.CreatedAt = time.Now()
-	newUser.UpdatedAt = time.Now()
-
-	err2 := db.PgConn.Create(&newUser).Error
-
-	if(err2 != nil){
-		return ctx.Status(401).JSON(err2)
+	if !isValidPassword{
+		return ctx.Status(404).JSON(Status{Success: false, Message: "Invalid Credentials"})
 	}
 
-	return ctx.Status(201).JSON(newUser)
+	session, sessionErr := mysession.SessionStore.Get(ctx)
 
+	if sessionErr != nil{
+		log.Fatal(sessionErr)
+	}
+
+	session.Set(constants.KLogin, models.User{Username: user.Username})
+
+	defer session.Save()
+
+	return ctx.Status(200).JSON(Status{Success: true, Message: "Logged In"})
 }
 
 // GetMe ...
 func GetMe(ctx *fiber.Ctx) error{
-	val, err := cache.GET("hello")
-	if err != nil{
-		log.Fatal(err)
+
+	session, sessionErr := mysession.SessionStore.Get(ctx)
+
+	if sessionErr != nil{
+		log.Fatal(sessionErr)
 	}
-	return ctx.SendString(val)
+
+	data := session.Get(constants.KLogin)
+
+	return ctx.Status(200).JSON(data)
 }
 
 // DeleteUser ...
