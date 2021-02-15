@@ -22,12 +22,6 @@ type Hello struct{
 	msg string
 }
 
-// Status ...
-type Status struct{
-	Success bool `json:"success"`
-	Message string `json:"message"`
-}
-
 // GetAllUsers ...
 func GetAllUsers(ctx *fiber.Ctx) error{
 	var users []models.User
@@ -47,7 +41,7 @@ func GetSingleUser(ctx *fiber.Ctx) error{
 
 	notFoundErr := errors.Is(err, gorm.ErrRecordNotFound)
 		if(notFoundErr || models.User{} == user){
-			return ctx.Status(404).JSON(Status{Success: false, Message: "User does not exist"})
+			return ctx.Status(404).JSON(types.Status{Success: false, Message: "User does not exist"})
 		}
 
 	return ctx.Status(200).JSON(user)
@@ -95,12 +89,6 @@ func LoginUser(ctx *fiber.Ctx) error{
 		log.Fatal(sessionErr)
 	}
 
-	data := session.Get(constants.KLogin)
-
-	if data != nil{
-		return ctx.Status(401).JSON(Status{Success: false, Message: "Not Auth"})
-	}
-
 	credentials := new(structs.SLogin)
 
 	if err := ctx.BodyParser(credentials); err != nil {
@@ -113,7 +101,7 @@ func LoginUser(ctx *fiber.Ctx) error{
 
 	notFoundErr := errors.Is(err, gorm.ErrRecordNotFound)
 		if(notFoundErr || models.User{} == user){
-			return ctx.Status(404).JSON(Status{Success: false, Message: "Invalid Credentials"})
+			return ctx.Status(404).JSON(types.Status{Success: false, Message: "Invalid Credentials"})
 		}
 
 	isValidPassword, argonErr := argon2id.ComparePasswordAndHash(credentials.Password, user.Password)
@@ -123,14 +111,14 @@ func LoginUser(ctx *fiber.Ctx) error{
 	}
 
 	if !isValidPassword{
-		return ctx.Status(404).JSON(Status{Success: false, Message: "Invalid Credentials"})
+		return ctx.Status(404).JSON(types.Status{Success: false, Message: "Invalid Credentials"})
 	}
 
 	session.Set(constants.KLogin, types.SSession{Username: user.Username})
 
 	defer session.Save()
 
-	return ctx.Status(200).JSON(Status{Success: true, Message: "Logged In"})
+	return ctx.Status(200).JSON(types.Status{Success: true, Message: "Logged In"})
 }
 
 // GetMe ...
@@ -144,10 +132,6 @@ func GetMe(ctx *fiber.Ctx) error{
 
 	data := session.Get(constants.KLogin)
 
-	if data == nil{
-		return ctx.Status(401).JSON(Status{Success: false, Message: "Not Auth"})
-	}
-
 	return ctx.Status(200).JSON(data)
 }
 
@@ -160,19 +144,13 @@ func LogoutUser(ctx *fiber.Ctx) error{
 		log.Fatal(sessionErr)
 	}
 
-	data := session.Get(constants.KLogin)
-
-	if data == nil{
-		return ctx.Status(401).JSON(Status{Success: false, Message: "Not Auth"})
-	}
-
 	err := session.Destroy()
 
 	if err != nil{
 		log.Fatal(err)
 	}
 
-	return ctx.Status(200).JSON(Status{Success: true, Message: "Logged Out"})
+	return ctx.Status(200).JSON(types.Status{Success: true, Message: "Logged Out"})
 }
 
 // DeleteUser ...
@@ -185,12 +163,12 @@ func DeleteUser(ctx *fiber.Ctx) error{
 
 	notFoundErr := errors.Is(err, gorm.ErrRecordNotFound)
 		if(notFoundErr || models.User{} == user){
-			return ctx.Status(404).JSON(Status{Success: false, Message: "user does not exist"})
+			return ctx.Status(404).JSON(types.Status{Success: false, Message: "user does not exist"})
 		}
 
 	dbc := db.PgConn.Delete(&user, id)
 	if(dbc.Error != nil){
 		return ctx.Status(401).JSON(dbc.Error)
 	}
-	return ctx.Status(200).JSON(Status{Success: true, Message: "user deleted successfully"})
+	return ctx.Status(200).JSON(types.Status{Success: true, Message: "user deleted successfully"})
 }

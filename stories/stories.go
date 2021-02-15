@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fibreApi/db"
 	"fibreApi/models"
+	"fibreApi/types"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -14,12 +15,6 @@ import (
 type Hello struct{
 	success bool
 	msg string
-}
-
-// Status ...
-type Status struct{
-	Success bool `json:"success"`
-	Message string `json:"message"`
 }
 
 // GetAllStories ...
@@ -41,7 +36,7 @@ func GetSingleStory(ctx *fiber.Ctx) error{
 
 	notFoundErr := errors.Is(err, gorm.ErrRecordNotFound)
 		if(notFoundErr || models.Story{} == story){
-			return ctx.Status(404).JSON(Status{Success: false, Message: "Story does not exist"})
+			return ctx.Status(404).JSON(types.Status{Success: false, Message: "Story does not exist"})
 		}
 
 	return ctx.Status(200).JSON(story)
@@ -84,12 +79,12 @@ func DeleteStory(ctx *fiber.Ctx) error{
 
 	notFoundErr := errors.Is(err, gorm.ErrRecordNotFound)
 		if(notFoundErr || models.Story{} == story){
-			return ctx.Status(404).JSON(Status{Success: false, Message: "Story does not exist"})
+			return ctx.Status(404).JSON(types.Status{Success: false, Message: "Story does not exist"})
 		}
 
 	dbc := db.PgConn.Delete(&story, id)
 	if(dbc.Error != nil){
 		return ctx.Status(401).JSON(dbc.Error)
 	}
-	return ctx.Status(200).JSON(Status{Success: true, Message: "Story deleted successfully"})
+	return ctx.Status(200).JSON(types.Status{Success: true, Message: "Story deleted successfully"})
 }

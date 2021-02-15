@@ -4,6 +4,7 @@ import (
 	"fibreApi/auth"
 	"fibreApi/cache"
 	"fibreApi/db"
+	"fibreApi/middlewares"
 	"fibreApi/mysession"
 	"fibreApi/stories"
 	"fmt"
@@ -15,19 +16,19 @@ import (
 
 func setupRoutes(app *fiber.App){
 	// stories
-	app.Get("/api/stories", stories.GetAllStories)
-	app.Get("/api/stories/:id", stories.GetSingleStory)
-	app.Post("/api/stories", stories.CreateStory)
-	app.Delete("/api/stories/:id", stories.DeleteStory)
+	app.Get("/api/stories", middlewares.ProtectMe, stories.GetAllStories)
+	app.Get("/api/stories/:id", middlewares.ProtectMe, stories.GetSingleStory)
+	app.Post("/api/stories", middlewares.ProtectMe, stories.CreateStory)
+	app.Delete("/api/stories/:id", middlewares.ProtectMe, stories.DeleteStory)
 	
 	// auth
-	app.Get("/api/users", auth.GetAllUsers)
-	app.Get("/api/users/:id", auth.GetSingleUser )
-	app.Post("/api/register", auth.RegisterUser )
-	app.Delete("/api/users/:id", auth.DeleteUser)
-	app.Get("/api/me", auth.GetMe)
-	app.Post("/api/login", auth.LoginUser)
-	app.Post("/api/logout", auth.LogoutUser)
+	app.Get("/api/users", middlewares.ProtectMe, auth.GetAllUsers)
+	app.Get("/api/users/:id", middlewares.ProtectMe, auth.GetSingleUser )
+	app.Post("/api/register", middlewares.IsFree, auth.RegisterUser )
+	app.Delete("/api/users/:id", middlewares.ProtectMe, auth.DeleteUser)
+	app.Get("/api/me", middlewares.ProtectMe, auth.GetMe)
+	app.Post("/api/login", middlewares.IsFree, auth.LoginUser)
+	app.Post("/api/logout", middlewares.ProtectMe, auth.LogoutUser)
 }
 
 func main(){
