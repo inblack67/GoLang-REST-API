@@ -2,12 +2,15 @@ package stories
 
 import (
 	"errors"
+	"fibreApi/constants"
 	"fibreApi/db"
 	"fibreApi/models"
+	"fibreApi/mysession"
 	"fibreApi/types"
-	"time"
+	"log"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofrs/uuid"
 	"gorm.io/gorm"
 )
 
@@ -55,9 +58,28 @@ func CreateStory(ctx *fiber.Ctx) error{
 		return ctx.Status(400).JSON(validationError)
 	}
 
+	myuuid, errUUID := uuid.NewV4()
 
-	newStory.CreatedAt = time.Now()
-	newStory.UpdatedAt = time.Now()
+	if errUUID != nil{
+		log.Fatal("errUUID",errUUID)
+	}
+
+	session, sessionErr := mysession.SessionStore.Get(ctx)
+
+	if sessionErr != nil{
+		log.Fatal(sessionErr)
+	}
+
+	data := session.Get(constants.KLogin)
+
+	user, ok := data.(types.SSession)
+
+	if !ok{
+		log.Fatal("session typecast err")
+	}
+
+	newStory.UUID = myuuid
+	newStory.UserID = user.User
 
 	err2 := db.PgConn.Create(&newStory).Error
 

@@ -8,6 +8,7 @@ require (
 	github.com/go-ozzo/ozzo-validation v3.6.0+incompatible
 	github.com/go-redis/redis/v8 v8.5.0
 	github.com/gofiber/fiber/v2 v2.5.0
+	github.com/gofrs/uuid v3.2.0+incompatible
 	gorm.io/driver/postgres v1.0.8
 	gorm.io/gorm v1.20.12
 // github.com/google/uuid v1.2.0

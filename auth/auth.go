@@ -9,10 +9,10 @@ import (
 	"fibreApi/structs"
 	"fibreApi/types"
 	"log"
-	"time"
 
 	"github.com/alexedwards/argon2id"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofrs/uuid"
 	"gorm.io/gorm"
 )
 
@@ -40,7 +40,7 @@ func GetSingleUser(ctx *fiber.Ctx) error{
 	err := db.PgConn.Find(&user, id).Error
 
 	notFoundErr := errors.Is(err, gorm.ErrRecordNotFound)
-		if(notFoundErr || models.User{} == user){
+		if(notFoundErr){
 			return ctx.Status(404).JSON(types.Status{Success: false, Message: "User does not exist"})
 		}
 
@@ -67,8 +67,14 @@ func RegisterUser(ctx *fiber.Ctx) error{
 	}
 
 	newUser.Password = hashedPassword
-	newUser.CreatedAt = time.Now()
-	newUser.UpdatedAt = time.Now()
+
+	myuuid, errUUID := uuid.NewV4()
+
+	if errUUID != nil{
+		log.Fatal("errUUID",errUUID)
+	}
+
+	newUser.UUID = myuuid
 
 	err2 := db.PgConn.Create(&newUser).Error
 
@@ -100,7 +106,7 @@ func LoginUser(ctx *fiber.Ctx) error{
 	err := db.PgConn.Find(&user, models.User{Username: credentials.Username}).Error
 
 	notFoundErr := errors.Is(err, gorm.ErrRecordNotFound)
-		if(notFoundErr || models.User{} == user){
+		if(notFoundErr){
 			return ctx.Status(404).JSON(types.Status{Success: false, Message: "Invalid Credentials"})
 		}
 
@@ -114,7 +120,7 @@ func LoginUser(ctx *fiber.Ctx) error{
 		return ctx.Status(404).JSON(types.Status{Success: false, Message: "Invalid Credentials"})
 	}
 
-	session.Set(constants.KLogin, types.SSession{Username: user.Username})
+	session.Set(constants.KLogin, types.SSession{Username: user.Username, User: user.ID})
 
 	defer session.Save()
 
@@ -162,7 +168,7 @@ func DeleteUser(ctx *fiber.Ctx) error{
 	err := db.PgConn.Find(&user, id).Error
 
 	notFoundErr := errors.Is(err, gorm.ErrRecordNotFound)
-		if(notFoundErr || models.User{} == user){
+		if(notFoundErr){
 			return ctx.Status(404).JSON(types.Status{Success: false, Message: "user does not exist"})
 		}
 
