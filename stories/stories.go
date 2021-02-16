@@ -118,6 +118,21 @@ func CreateStory(ctx *fiber.Ctx) error{
 
 // DeleteStory ...
 func DeleteStory(ctx *fiber.Ctx) error{
+
+	session, sessionErr := mysession.SessionStore.Get(ctx)
+
+	if sessionErr != nil{
+		log.Fatal(sessionErr)
+	}
+
+	data := session.Get(constants.KLogin)
+
+	user, ok := data.(types.SSession)
+
+	if !ok{
+		log.Fatal("session typecast err")
+	}
+
 	id := ctx.Params("id")
 
 	var story models.Story
@@ -128,6 +143,10 @@ func DeleteStory(ctx *fiber.Ctx) error{
 		if(notFoundErr || models.Story{} == story){
 			return ctx.Status(404).JSON(types.Status{Success: false, Message: "Story does not exist"})
 		}
+
+	if story.UserID != user.User{
+		return ctx.Status(404).JSON(types.Status{Success: false, Message: "Not Authorized"})
+	}
 
 	dbc := db.PgConn.Delete(&story, id)
 	if(dbc.Error != nil){
