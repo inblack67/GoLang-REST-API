@@ -10,11 +10,12 @@ import (
 // User ...
 type User struct{
 	gorm.Model
+	ID uint `json:"-"`
 	UUID  uuid.UUID `gorm:"unique; not null; default: null;" json:"uuid,omitempty"`
 	Name string `json:"name,omitempty" gorm:"not null;default:null"`
 	Username string `json:"username,omitempty" gorm:"unique;not null;default:null"`
 	Email string `json:"email,omitempty" gorm:"unique;not null;default:null"`
-	Password string `json:"password,omitempty" gorm:"not null;default:null"`
+	Password string `json:"-" gorm:"not null;default:null"`
 	Stories []Story `json:"stories" gorm:"foreignKey:UserID"`
 }
 
@@ -36,9 +37,10 @@ func (newUser User) ValidateMe() error{
 // Story ...
 type Story struct{
 	gorm.Model
+	ID uint `json:"-"`
 	UUID  uuid.UUID `gorm:"unique; not null; default: null;" json:"uuid,omitempty"`
 	Title string `json:"title,omitempty" gorm:"unique;not null;default:null"`
-	UserID uint `json:"userId,omitempty" gorm:"not null"`
+	UserID uint `json:"-" gorm:"not null"`
 }
 
 // ValidateStory ...
