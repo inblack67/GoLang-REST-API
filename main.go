@@ -17,6 +17,7 @@ import (
 func setupRoutes(app *fiber.App){
 	// stories
 	app.Get("/api/stories", middlewares.ProtectMe, stories.GetAllStories)
+	app.Get("/api/stories/me", middlewares.ProtectMe, stories.GetMyStories)
 	app.Get("/api/stories/:id", middlewares.ProtectMe, stories.GetSingleStory)
 	app.Post("/api/stories", middlewares.ProtectMe, stories.CreateStory)
 	app.Delete("/api/stories/:id", middlewares.ProtectMe, stories.DeleteStory)

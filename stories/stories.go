@@ -30,6 +30,31 @@ func GetAllStories(ctx *fiber.Ctx) error{
 	return ctx.Status(200).JSON(stories)
 }
 
+// GetMyStories ...
+func GetMyStories(ctx *fiber.Ctx) error{
+
+	session, sessionErr := mysession.SessionStore.Get(ctx)
+
+	if sessionErr != nil{
+		log.Fatal(sessionErr)
+	}
+
+	data := session.Get(constants.KLogin)
+
+	user, ok := data.(types.SSession)
+
+	if !ok{
+		log.Fatal("session typecast err")
+	}
+
+	var stories []models.Story
+	dbc := db.PgConn.Find(&stories, models.Story{UserID: user.User})
+	if(dbc.Error != nil){
+		return ctx.Status(401).JSON(dbc.Error)
+	}
+	return ctx.Status(200).JSON(stories)
+}
+
 // GetSingleStory ...
 func GetSingleStory(ctx *fiber.Ctx) error{
 	id := ctx.Params("id")
