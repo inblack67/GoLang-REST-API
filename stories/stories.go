@@ -1,13 +1,18 @@
 package stories
 
 import (
+	"context"
+	"encoding/json"
 	"errors"
+	"fibreApi/cache"
 	"fibreApi/constants"
 	"fibreApi/db"
 	"fibreApi/models"
 	"fibreApi/mysession"
 	"fibreApi/types"
+	"fmt"
 	"log"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofrs/uuid"
@@ -22,12 +27,47 @@ type Hello struct{
 
 // GetAllStories ...
 func GetAllStories(ctx *fiber.Ctx) error{
-	var stories []models.Story
-	dbc := db.PgConn.Find(&stories)
-	if(dbc.Error != nil){
-		return ctx.Status(401).JSON(dbc.Error)
+
+	cachedMarshalledStories, getErr := cache.RedisClient.Get(context.Background(), constants.KGetStories).Result()
+
+	if getErr != nil{
+
+		fmt.Println("Get All Stories DB Query")
+
+		var stories []models.Story
+
+		dbc := db.PgConn.Find(&stories)
+
+		if(dbc.Error != nil){
+			return ctx.Status(401).JSON(dbc.Error)
+		}
+
+		marshalledStories, marshallErr  := json.Marshal(stories)
+
+		if marshallErr != nil{
+			log.Fatal("marshallErr", marshallErr)
+		}
+
+		setErr := cache.RedisClient.Set(context.Background(), constants.KGetStories, marshalledStories, time.Hour * 24).Err()
+
+		if setErr != nil{
+			log.Fatal("setErr", setErr)
+		}
+
+		return ctx.Status(200).JSON(stories)
 	}
-	return ctx.Status(200).JSON(stories)
+
+	var cachedStories []models.Story
+
+	unmarshalErr := json.Unmarshal([]byte(cachedMarshalledStories), &cachedStories)
+
+	if unmarshalErr != nil{
+		log.Fatal("unmarshalErr", unmarshalErr)
+	}
+
+	fmt.Println("Get All Stories Redis Query")
+
+	return ctx.Status(200).JSON(cachedStories)
 }
 
 // GetMyStories ...

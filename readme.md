@@ -5,6 +5,7 @@
     - Login
     - Logout
     - CRUD Stories
+    - Relationships
 
 ### Tech Stack
     - GoLang
