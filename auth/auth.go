@@ -37,7 +37,7 @@ func GetSingleUser(ctx *fiber.Ctx) error{
 	id := ctx.Params("id")
 	var user models.User
 
-	err := db.PgConn.Find(&user, id).Error
+	err := db.PgConn.Preload("Stories").Find(&user, id).Error
 
 	notFoundErr := errors.Is(err, gorm.ErrRecordNotFound)
 		if(notFoundErr){
