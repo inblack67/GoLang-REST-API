@@ -1,9 +1,10 @@
 package types
 
+import "fibreApi/models"
+
 // SSession ...
 type SSession struct{
-	Username string `json:"username"`
-	User uint `json:"user"`
+	User models.User
 }
 
 // Status ...

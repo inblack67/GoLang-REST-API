@@ -38,7 +38,7 @@ func GetAllStories(ctx *fiber.Ctx) error{
 
 		dbc := db.PgConn.Find(&stories)
 
-		if(dbc.Error != nil){
+		if dbc.Error != nil{
 			return ctx.Status(401).JSON(dbc.Error)
 		}
 
@@ -88,8 +88,8 @@ func GetMyStories(ctx *fiber.Ctx) error{
 	}
 
 	var stories []models.Story
-	dbc := db.PgConn.Find(&stories, models.Story{UserID: user.User})
-	if(dbc.Error != nil){
+	dbc := db.PgConn.Find(&stories, models.Story{UserID: user.User.ID})
+	if dbc.Error != nil{
 		return ctx.Status(401).JSON(dbc.Error)
 	}
 	return ctx.Status(200).JSON(stories)
@@ -103,7 +103,7 @@ func GetSingleStory(ctx *fiber.Ctx) error{
 	err := db.PgConn.Find(&story, id).Error
 
 	notFoundErr := errors.Is(err, gorm.ErrRecordNotFound)
-		if(notFoundErr || models.Story{} == story){
+		if notFoundErr || (models.Story{} == story) {
 			return ctx.Status(404).JSON(types.Status{Success: false, Message: "Story does not exist"})
 		}
 
@@ -144,11 +144,11 @@ func CreateStory(ctx *fiber.Ctx) error{
 	}
 
 	newStory.UUID = myuuid
-	newStory.UserID = user.User
+	newStory.UserID = user.User.ID
 
 	err2 := db.PgConn.Create(&newStory).Error
 
-	if(err2 != nil){
+	if err2 != nil{
 		return ctx.Status(401).JSON(err2)
 	}
 
@@ -180,16 +180,16 @@ func DeleteStory(ctx *fiber.Ctx) error{
 	err := db.PgConn.Find(&story, id).Error
 
 	notFoundErr := errors.Is(err, gorm.ErrRecordNotFound)
-		if(notFoundErr || models.Story{} == story){
+		if notFoundErr || (models.Story{} == story){
 			return ctx.Status(404).JSON(types.Status{Success: false, Message: "Story does not exist"})
 		}
 
-	if story.UserID != user.User{
+	if story.UserID != user.User.ID{
 		return ctx.Status(404).JSON(types.Status{Success: false, Message: "Not Authorized"})
 	}
 
 	dbc := db.PgConn.Delete(&story, id)
-	if(dbc.Error != nil){
+	if dbc.Error != nil{
 		return ctx.Status(401).JSON(dbc.Error)
 	}
 	return ctx.Status(200).JSON(types.Status{Success: true, Message: "Story deleted successfully"})

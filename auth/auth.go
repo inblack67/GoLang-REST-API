@@ -26,7 +26,7 @@ type Hello struct{
 func GetAllUsers(ctx *fiber.Ctx) error{
 	var users []models.User
 	dbc := db.PgConn.Find(&users)
-	if(dbc.Error != nil){
+	if dbc.Error != nil {
 		return ctx.Status(401).JSON(dbc.Error)
 	}
 	return ctx.Status(200).JSON(users)
@@ -40,7 +40,7 @@ func GetSingleUser(ctx *fiber.Ctx) error{
 	err := db.PgConn.Preload("Stories").Find(&user, id).Error
 
 	notFoundErr := errors.Is(err, gorm.ErrRecordNotFound)
-		if(notFoundErr){
+		if notFoundErr {
 			return ctx.Status(404).JSON(types.Status{Success: false, Message: "User does not exist"})
 		}
 
@@ -78,7 +78,7 @@ func RegisterUser(ctx *fiber.Ctx) error{
 
 	err2 := db.PgConn.Create(&newUser).Error
 
-	if(err2 != nil){
+	if err2 != nil {
 		return ctx.Status(401).JSON(err2)
 	}
 
@@ -106,7 +106,7 @@ func LoginUser(ctx *fiber.Ctx) error{
 	err := db.PgConn.Find(&user, models.User{Username: credentials.Username}).Error
 
 	notFoundErr := errors.Is(err, gorm.ErrRecordNotFound)
-		if(notFoundErr){
+		if notFoundErr {
 			return ctx.Status(404).JSON(types.Status{Success: false, Message: "Invalid Credentials"})
 		}
 
@@ -120,7 +120,7 @@ func LoginUser(ctx *fiber.Ctx) error{
 		return ctx.Status(404).JSON(types.Status{Success: false, Message: "Invalid Credentials"})
 	}
 
-	session.Set(constants.KLogin, types.SSession{Username: user.Username, User: user.ID})
+	session.Set(constants.KLogin, types.SSession{User: user})
 
 	defer session.Save()
 
@@ -168,12 +168,12 @@ func DeleteUser(ctx *fiber.Ctx) error{
 	err := db.PgConn.Find(&user, id).Error
 
 	notFoundErr := errors.Is(err, gorm.ErrRecordNotFound)
-		if(notFoundErr){
+		if notFoundErr {
 			return ctx.Status(404).JSON(types.Status{Success: false, Message: "user does not exist"})
 		}
 
 	dbc := db.PgConn.Delete(&user, id)
-	if(dbc.Error != nil){
+	if dbc.Error != nil {
 		return ctx.Status(401).JSON(dbc.Error)
 	}
 	return ctx.Status(200).JSON(types.Status{Success: true, Message: "user deleted successfully"})
